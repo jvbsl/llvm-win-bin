@@ -1,0 +1,42 @@
+name: engenious Build
+
+on:
+  workflow_dispatch:
+    inputs:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: 
+        os: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup
+      run: |
+            git clone https://github.com/Microsoft/vcpkg.git
+            ./vcpkg/bootstrap-vcpkg.bat
+      shell: pwsh
+    - name: Patch VCPKG for Release
+      run: |
+        Add-Content -Path ./vcpkg/triplets/community/x86-windows-static.cmake "`n`nset(VCPKG_BUILD_TYPE release)"
+        Set-Content -Path ./vcpkg/scripts/toolchains/windows.cmake ((Get-Content -path ./vcpkg/scripts/toolchains/windows.cmake -Raw) -replace '/Z7','')
+      shell: pwsh
+    - name: Compile LLVM
+      run: ./vcpkg/vcpkg.exe install llvm:x86-windows-static
+      shell: pwsh
+    - name: Create archive
+      run: 7z a llvm_x86-windows-static.zip ./vcpkg/packages/llvm_x86-windows-static/*
+    - name: Test file size
+      run: Write-Host((Get-Item llvm_x86-windows-static.zip).Length)
+      shell: pwsh

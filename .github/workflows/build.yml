@@ -1,4 +1,4 @@
-name: engenious Build
+name: LLVM Build
 
 on:
   workflow_dispatch:

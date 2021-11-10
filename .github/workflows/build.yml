@@ -30,13 +30,22 @@ jobs:
     - name: Patch VCPKG for Release
       run: |
         Add-Content -Path ./vcpkg/triplets/community/x86-windows-static.cmake "`n`nset(VCPKG_BUILD_TYPE release)"
+        Add-Content -Path ./vcpkg/triplets/x64-windows-static.cmake "`n`nset(VCPKG_BUILD_TYPE release)"
         Set-Content -Path ./vcpkg/scripts/toolchains/windows.cmake ((Get-Content -path ./vcpkg/scripts/toolchains/windows.cmake -Raw) -replace '/Z7','')
       shell: pwsh
-    - name: Compile LLVM
+    - name: Compile LLVM x86
       run: ./vcpkg/vcpkg.exe install llvm:x86-windows-static
       shell: pwsh
-    - name: Create archive
-      run: 7z a llvm_x86-windows-static.zip ./vcpkg/packages/llvm_x86-windows-static/*
-    - name: Test file size
-      run: Write-Host((Get-Item llvm_x86-windows-static.zip).Length)
+    - name: Compile LLVM x64
+      run: ./vcpkg/vcpkg.exe install llvm:x64-windows-static
       shell: pwsh
+    - name: Upload x86 build
+      uses: actions/upload-artifact@v2
+      with:
+        name: llvm_x86-windows-static
+        path: ./vcpkg/packages/llvm_x86-windows-static/**/*
+    - name: Upload x64 build
+      uses: actions/upload-artifact@v2
+      with:
+        name: llvm_x64-windows-static
+        path: ./vcpkg/packages/llvm_x64-windows-static/**/*

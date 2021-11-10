@@ -17,9 +17,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
+        arch: [ x86 ]
         os: [windows-latest]
-
+        include:
+          - arch: x64
+            os: windows-latest
     steps:
     - uses: actions/checkout@v1
     - name: Setup
@@ -36,16 +39,20 @@ jobs:
     - name: Compile LLVM x86
       run: ./vcpkg/vcpkg.exe install llvm:x86-windows-static
       shell: pwsh
+      if: matrix.arch == 'x86'
     - name: Compile LLVM x64
       run: ./vcpkg/vcpkg.exe install llvm:x64-windows-static
       shell: pwsh
+      if: matrix.arch == 'x64'
     - name: Upload x86 build
       uses: actions/upload-artifact@v2
       with:
         name: llvm_x86-windows-static
         path: ./vcpkg/packages/llvm_x86-windows-static/**/*
+      if: matrix.arch == 'x86'
     - name: Upload x64 build
       uses: actions/upload-artifact@v2
       with:
         name: llvm_x64-windows-static
         path: ./vcpkg/packages/llvm_x64-windows-static/**/*
+      if: matrix.arch == 'x64'
